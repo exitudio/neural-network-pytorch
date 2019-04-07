@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from .initializers import Constant
-from .optimizers import Momentum
+from .optimizers import MomentumFeedForward
 from .constants import EPSILON
 import torch
 
@@ -61,23 +61,21 @@ class BatchNorm(Layer):
         # init optimizer
         self._optimizer_G = optimizer.generate_optimizer((1, num_output))
         self._optimizer_B = optimizer.generate_optimizer((1, num_output))
-        self._optimizer_mean = Momentum().generate_optimizer(
+        self._optimizer_mean = MomentumFeedForward().generate_optimizer(
             (1, num_output))
-        self._optimizer_variance = Momentum().generate_optimizer(
+        self._optimizer_variance = MomentumFeedForward().generate_optimizer(
             (1, num_output))
 
     def feed_forward(self, z, is_predict):
         current_mean = z.mean(dim=0)
-        with torch.no_grad():
-            mean = self._optimizer_mean._velocity if is_predict else self._optimizer_mean.get_velocity(
-                current_mean)
+        mean = self._optimizer_mean._velocity if is_predict else self._optimizer_mean.get_velocity(
+            current_mean)
 
         diff_mean = z-mean
 
         current_variance = torch.pow(diff_mean, 2).mean(dim=0)
-        with torch.no_grad():
-            variance = self._optimizer_variance._velocity if is_predict else self._optimizer_variance.get_velocity(
-                current_variance)
+        variance = self._optimizer_variance._velocity if is_predict else self._optimizer_variance.get_velocity(
+            current_variance)
 
         z_norm = diff_mean / torch.sqrt(variance + EPSILON)
         output = self._batch_norm_G * z_norm + self._batch_norm_B
@@ -91,3 +89,17 @@ class BatchNorm(Layer):
                 self._optimizer_G.get_velocity(self._batch_norm_B.grad)
             self._batch_norm_G.grad.zero_()
             self._batch_norm_B.grad.zero_()
+
+
+class Conv2D(ABC):
+    def __init__(self, filter_size, padding, stride, channel):
+        pass
+
+    def init_weights(self, num_input, optimizer, initializer):
+        pass
+
+    def feed_forward(self, input, is_predict):
+        pass
+
+    def back_prop(self, learning_rate):
+        pass

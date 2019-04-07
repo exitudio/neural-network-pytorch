@@ -35,6 +35,23 @@ class Momentum(Optimizer):
     def generate_optimizer(self, shape):
         return Momentum(self._beta, shape)
 
+class MomentumFeedForward(Optimizer):
+    # In coursera, prof Andrew suggest beta=.9 ~ average out around 10 pass data
+    def __init__(self, beta=0.9, shape=None):
+        self._beta = beta
+
+        if shape is not None:
+            self._velocity = torch.zeros(shape)
+
+    def get_velocity(self, d):
+        v = self._beta * self._velocity + (1-self._beta) * d
+        with torch.no_grad():
+            self._velocity = v.detach()
+        return v
+
+    def generate_optimizer(self, shape):
+        return MomentumFeedForward(self._beta, shape)
+
 
 class RMSProp(Optimizer):
     def __init__(self, beta=0.999, shape=None):

@@ -31,7 +31,7 @@ class NeuralNetwork:
 
         # loss
         loss = loss_function(expected_output, output_from_layer)
-        loss.backward()
+        loss.backward(retain_graph=True)
         # back prop
         for _, layer in reversed(list(enumerate(self._network))):
             layer.back_prop(learning_rate)
